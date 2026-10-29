@@ -16,9 +16,11 @@
 
 ## 下一步（v0.2 · 开源封装的必修项）
 
-按优先级：
+已完成：首次启动引导页（`ui/setup/SetupActivity.kt`）、GitHub Actions 自动出包（`.github/workflows/android.yml`）。
 
-1. **首次启动引导页**
+剩余按优先级：
+
+1. ~~**首次启动引导页**~~ ✅
    填地址 → 测连通 → 一键申请悬浮窗/麦克风 → 引导关电池优化。
    现在这些都靠 adb 手动做，陌生人装完会直接懵。
 
@@ -33,7 +35,7 @@
 4. **`docs/faq-xiaomi.md` 的内容进 App**
    装机后第一次添加组件失败，App 里直接给解法，而不是让用户去翻文档。
 
-5. **GitHub Actions 自动出包**
+5. ~~**GitHub Actions 自动出包**~~ ✅
    打 tag → 自动编译 → 挂 Release。别人用 Obtainium 订阅后能自动更新。
 
 ## 之后（v0.3+）

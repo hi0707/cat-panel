@@ -1,0 +1,73 @@
+name: build-apk
+
+# 打一个 tag（v0.1.0 ...）就自动编译并把 APK 挂到 Release。
+# 也可以在 Actions 页面手动 Run workflow，产物在 Artifacts 里。
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Cache Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: gradle-${{ runner.os }}-
+
+      - name: Build debug APK
+        run: |
+          chmod +x ./gradlew
+          ./gradlew :app:assembleDebug --no-daemon
+
+      - name: Rename artifact
+        id: apk
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          [ -z "$VERSION" ] && VERSION="dev-$(date +%Y%m%d-%H%M)"
+          OUT="cat-panel-${VERSION}.apk"
+          cp app/build/outputs/apk/debug/app-debug.apk "$OUT"
+          echo "name=$OUT" >> "$GITHUB_OUTPUT"
+          echo "sha256=$(sha256sum "$OUT" | cut -d" " -f1)" >> "$GITHUB_OUTPUT"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: apk
+          path: ${{ steps.apk.outputs.name }}
+
+      - name: Publish release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ steps.apk.outputs.name }}
+          body: |
+            **安装**：下载下面的 `.apk` 直接装（Android 8.0+）。
+
+            **SHA256**：`${{ steps.apk.outputs.sha256 }}`
+
+            **首次使用**：打开 App → 填你的 agent 服务地址和口令 → 测试连接 → 给权限。
+
+            小米/红米用户：如果桌面组件加不上，看 [docs/faq-xiaomi.md](docs/faq-xiaomi.md)。
+
+            想要自动更新：装 [Obtainium](https://github.com/ImranR98/Obtainium)，把本仓库地址粘进去。
