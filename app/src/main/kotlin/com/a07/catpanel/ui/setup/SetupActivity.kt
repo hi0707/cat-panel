@@ -202,7 +202,7 @@ private fun SetupScreen(
           enabled = addressOk && conn != ConnState.Testing,
           onClick = {
             conn = ConnState.Testing
-            testConnection(endpoint) { conn = it }
+            testConnection(endpoint, token) { conn = it }
           },
         ) { Text("测试连接") }
         if (conn == ConnState.Testing) CircularProgressIndicator(modifier = Modifier.height(20.dp))
@@ -278,10 +278,13 @@ private fun PermissionRow(
 }
 
 /**
- * 只打 /api/health（免认证）。能通说明地址和网络对；口令对不对要真正发一句话才知道，
- * 所以这里把三种失败原因分开报，而不是笼统说"连接失败"。
+ * 打 /api/health 探活。
+ *
+ * 注意：协议里 health 是免认证的，但社区里的后端**未必**照做（有的实现对 health 也校验口令，
+ * 不带就 403）。所以这里**一律带上口令**——服务端忽略也无所谓；不带的后果是"明明能用却报 403"，
+ * 这种假阴性比多传一个 header 糟糕得多（07 2026-10-29 实测踩到）。
  */
-private fun testConnection(endpoint: String, done: (ConnState) -> Unit) {
+private fun testConnection(endpoint: String, accessKey: String, done: (ConnState) -> Unit) {
   val main = Handler(Looper.getMainLooper())
   Thread {
     val result = runCatching {
@@ -290,11 +293,16 @@ private fun testConnection(endpoint: String, done: (ConnState) -> Unit) {
         connectTimeout = 4000
         readTimeout = 4000
         requestMethod = "GET"
+        if (accessKey.isNotBlank()) {
+          setRequestProperty("X-Panel-Key", accessKey)
+          setRequestProperty("Authorization", "Bearer $accessKey")
+        }
       }
       try {
         val code = conn.responseCode
         if (code != 200) return@runCatching ConnState.Fail(
           when (code) {
+            401, 403 -> "服务是活的，但没认这个口令（$code）。检查口令是否复制完整（注意别带上空格）。"
             404 -> "这个地址上没有面板服务（404）。检查端口号，或服务是不是还没启动。"
             502, 503, 504 -> "服务在那台机器上，但没起来（$code）。去看服务端日志。"
             else -> "服务返回 $code。看服务端日志。"
