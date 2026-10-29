@@ -162,7 +162,10 @@ class VoiceOverlayService : Service() {
               asr = null
               vm.resetSession()
               rememberPosition()
+              // 等这一帧把内容画小，再把窗口收成一粒；顺序反了会夹住内容
+              overlayView?.post { lockWindowToMic() }
             },
+            onBeforeExpand = ::unlockWindow,
           )
         }
       }
@@ -260,6 +263,37 @@ class VoiceOverlayService : Service() {
     val maxY = (metrics.heightPixels - view.height).coerceAtLeast(0)
     p.x = (p.x + dx).roundToInt().coerceIn(0, maxX)
     p.y = (p.y + dy).roundToInt().coerceIn(0, maxY)
+    runCatching { windowManager.updateViewLayout(view, p) }
+  }
+
+  /**
+   * 收起后把窗口钉成「一粒麦克风」的固定尺寸。
+   *
+   * 为什么不能只靠 WRAP_CONTENT：MIUI 上内容变小时窗口不重算，会留一条长框。
+   * 反过来也踩过坑（11:50 事故）：把窗口长期钉在内容尺寸上，内容被窗口夹住长不大，
+   * 点麦克风后永远是个小圆圈 —— 所以只允许「收起态」钉死，展开前必须先解锁。
+   */
+  private fun lockWindowToMic() {
+    val p = params ?: return
+    val view = overlayView ?: return
+    val side = (60 * resources.displayMetrics.density).roundToInt() // 48dp 麦克风 + 6dp*2 外边距
+    if (p.width == side && p.height == side) return
+    p.width = side
+    p.height = side
+    p.x = p.x.coerceIn(0, (resources.displayMetrics.widthPixels - side).coerceAtLeast(0))
+    p.y = p.y.coerceIn(0, (resources.displayMetrics.heightPixels - side).coerceAtLeast(0))
+    runCatching { windowManager.updateViewLayout(view, p) }
+  }
+
+  /** 展开前解锁：恢复 WRAP_CONTENT，内容才有空间长大 */
+  private fun unlockWindow() {
+    val p = params ?: return
+    val view = overlayView ?: return
+    if (p.width == WindowManager.LayoutParams.WRAP_CONTENT &&
+      p.height == WindowManager.LayoutParams.WRAP_CONTENT
+    ) return
+    p.width = WindowManager.LayoutParams.WRAP_CONTENT
+    p.height = WindowManager.LayoutParams.WRAP_CONTENT
     runCatching { windowManager.updateViewLayout(view, p) }
   }
 
@@ -402,6 +436,7 @@ private fun OverlayTray(
   onEditFocus: (Boolean) -> Unit,
   onDraftChange: (String) -> Unit,
   onCollapse: () -> Unit,
+  onBeforeExpand: () -> Unit,
 ) {
   // 收起 = 只剩一粒麦克风；展开 = 整条工具条
   var barOpen by remember { mutableStateOf(false) }
@@ -423,7 +458,10 @@ private fun OverlayTray(
 
   // 一开口就展开工具条
   LaunchedEffect(state.captureState) {
-    if (state.captureState != CaptureState.Idle) barOpen = true
+    if (state.captureState != CaptureState.Idle && !barOpen) {
+      onBeforeExpand()   // 从小组件/通知栏进来的录音，也要先解锁窗口
+      barOpen = true
+    }
   }
 
   val shown = state.shownText
@@ -468,6 +506,7 @@ private fun OverlayTray(
             }
           }
           if (!dragged && !barOpen) {
+            onBeforeExpand()
             barOpen = true
             onToggleCapture()
           }
