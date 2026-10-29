@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <!-- 常驻浮层：系统悬浮窗（非 Activity），窗外手势归还桌面 -->
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- 小米桌面在"一键添加小部件"时会检查这项（MIUI 的 PinShortcutRequestUtils 报 has no permission） -->
+    <uses-permission android:name="android.permission.INSTALL_SHORTCUT" />
+    <uses-permission android:name="com.android.launcher.permission.INSTALL_SHORTCUT" />
+    <uses-permission android:name="com.miui.home.permission.INSTALL_SHORTCUT" />
+    <!-- 关键：小米桌面 InstallWidgetReceiver 的门槛权限（protectionLevel=normal，可自动授予） -->
+    <uses-permission android:name="com.miui.home.launcher.permission.INSTALL_WIDGET" />
+
+    <!-- Android 11+ hides external recognition services unless the app declares this query. -->
+    <queries>
+        <intent>
+            <action android:name="android.speech.RecognitionService" />
+        </intent>
+    </queries>
+
+    <application
+        android:allowBackup="false"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_rules"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:usesCleartextTraffic="true"
+        android:windowSoftInputMode="adjustResize"
+        android:theme="@style/Theme.Cat">
+        <!-- 面板（设置/历史/展开编辑）：不单独占桌面图标，从浮层的「展开」进入 -->
+        <activity
+            android:name=".MainActivity"
+            android:exported="false" />
+
+        <!-- 首次启动引导：填地址/测连通/给权限。配好之后不再出现 -->
+        <activity
+            android:name=".ui.setup.SetupActivity"
+            android:exported="false"
+            android:theme="@style/Theme.Cat" />
+
+        <!-- 唯一桌面入口：点图标 = 直接出可拖动浮条 -->
+        <activity
+            android:name=".voice.VoiceCaptureActivity"
+            android:excludeFromRecents="true"
+            android:exported="true"
+            android:launchMode="singleTop"
+            android:theme="@style/Theme.Cat.QuickVoice"
+            android:windowSoftInputMode="adjustResize">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <service
+            android:name=".voice.VoiceOverlayService"
+            android:exported="false"
+            android:foregroundServiceType="microphone" />
+
+        <receiver
+            android:name=".widget.CatPanelWidgetProvider"
+            android:exported="false"
+            android:label="@string/app_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/cat_panel_widget_info" />
+        </receiver>
+    </application>
+
+</manifest>

@@ -77,9 +77,29 @@ Cat Panel 把这条路压成一步：**在任何界面上，点一下悬浮的�
 - **小米/红米用户必看** [`docs/faq-xiaomi.md`](docs/faq-xiaomi.md)：桌面组件加不上不是 bug，是系统把权限默认拒了，而且每次装包都会重置。
 - **音频走网络。** 如果你的服务在外网，语音要绕一圈；局域网内延迟可以忽略。
 
+## 仓库结构
+
+```
+cat-panel/
+├── app/               安卓客户端（Kotlin + Compose）
+├── server/            参考后端（Python 3 标准库，零依赖）
+├── docs/              接口契约 + 四种连通方案 + 小米 FAQ
+└── .github/workflows/ 打 tag 自动编译出 APK
+```
+
+自己编译（装了 Android SDK 就能跑）：
+
+```bash
+./gradlew :app:assembleDebug
+# 产物 app/build/outputs/apk/debug/app-debug.apk
+```
+
+只改服务端、不碰客户端的话，`cd server && python3 main.py` 就够。
+
 ## 项目状态
 
-早期。核心体验（悬浮窗录音、实时转写、发送、回复显示）已经在日常使用中跑通；开源封装（首次引导、参考后端、多用户隔离）正在做。
+早期但能日常用。已跑通：悬浮窗录音、实时转写、发送、回复显示、首次引导页、参考后端、CI 出包。
+**还没做：多人用的会话隔离**（现在一个服务对应一个会话，两个人同时用会串）。
 
 看 [`docs/roadmap.md`](docs/roadmap.md)。
 

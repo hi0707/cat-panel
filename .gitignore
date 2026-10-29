@@ -1,25 +1,31 @@
-# Android
+# === Android ===
 *.apk
 *.aab
 *.keystore
+*.jks
 local.properties
 .gradle/
+.kotlin/
 build/
 **/build/
 .idea/
 *.iml
+captures/
+.cxx/
+.externalNativeBuild/
+*.bak-*
 
-# Python
+# === Python ===
 __pycache__/
 *.pyc
 .venv/
 
-# 机密 —— 绝不入库
+# === 机密 —— 绝不入库 ===
 .secrets/
 *.token
 panel_key*
 .env
-
-# 系统
-.DS_Store
 config.json
+
+# === 系统 ===
+.DS_Store

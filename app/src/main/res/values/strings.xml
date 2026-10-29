@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">Cat 面板</string>
+    <string name="widget_description">不用打开任何聊天 App，直接说话并查看最近回复</string>
+    <string name="widget_title">Cat</string>
+    <string name="widget_speak">说话</string>
+    <string name="widget_expand">展开</string>
+    <string name="shortcut_speak_short">说一句话</string>
+    <string name="shortcut_speak_long">点一下就开始听，边说边出字</string>
+</resources>

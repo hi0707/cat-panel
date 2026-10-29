@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:enabled="true"
+        android:icon="@mipmap/ic_launcher"
+        android:shortcutId="speak"
+        android:shortcutLongLabel="@string/shortcut_speak_long"
+        android:shortcutShortLabel="@string/shortcut_speak_short">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetClass="com.a07.catpanel.voice.VoiceCaptureActivity"
+            android:targetPackage="com.a07.catpanel" />
+        <categories android:name="android.shortcut.conversation" />
+    </shortcut>
+</shortcuts>
