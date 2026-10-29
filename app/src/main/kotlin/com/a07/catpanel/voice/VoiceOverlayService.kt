@@ -56,7 +56,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
@@ -145,13 +144,6 @@ class VoiceOverlayService : Service() {
       setViewTreeViewModelStoreOwner(owner)
       setContent {
         CatTheme(darkTheme = true) {
-          // 悬浮窗是 WRAP_CONTENT，但 MIUI 不会因为内容变小就重算窗口尺寸 →
-          // 收起后仍留一条长框。这里把内容真实尺寸交给窗口，强制同步（07 2026-10-29 实测报障）。
-          Box(
-            modifier = Modifier.onSizeChanged { size ->
-              syncWindowToContent(size.width, size.height)
-            },
-          ) {
           OverlayTray(
             state = vm.uiState,
             onToggleCapture = { toggleListening(vm) },
@@ -170,11 +162,8 @@ class VoiceOverlayService : Service() {
               asr = null
               vm.resetSession()
               rememberPosition()
-              // 内容立刻变矮，但窗口要等下一帧测量；主动催一次
-              overlayView?.post { overlayView?.requestLayout() }
             },
           )
-          }
         }
       }
     }
@@ -271,26 +260,6 @@ class VoiceOverlayService : Service() {
     val maxY = (metrics.heightPixels - view.height).coerceAtLeast(0)
     p.x = (p.x + dx).roundToInt().coerceIn(0, maxX)
     p.y = (p.y + dy).roundToInt().coerceIn(0, maxY)
-    runCatching { windowManager.updateViewLayout(view, p) }
-  }
-
-  /**
-   * 把窗口尺寸钉到内容的真实像素。
-   *
-   * 纯 WRAP_CONTENT 在 MIUI 上有个坑：内容从「长条」变回「一粒麦克风」时，
-   * 窗口不会跟着缩，屏幕上看就是"点了收起还是长条"。显式给宽高最可靠。
-   */
-  private fun syncWindowToContent(width: Int, height: Int) {
-    if (width <= 0 || height <= 0) return
-    val p = params ?: return
-    val view = overlayView ?: return
-    if (p.width == width && p.height == height) return
-    p.width = width
-    p.height = height
-    // 尺寸变小后落点可能越界，拉回屏内
-    val metrics = resources.displayMetrics
-    p.x = p.x.coerceIn(0, (metrics.widthPixels - width).coerceAtLeast(0))
-    p.y = p.y.coerceIn(0, (metrics.heightPixels - height).coerceAtLeast(0))
     runCatching { windowManager.updateViewLayout(view, p) }
   }
 
