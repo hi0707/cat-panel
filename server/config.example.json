@@ -1,0 +1,36 @@
+{
+  "name": "my-agent",
+  "token": "换成一串至少16位的随机串（openssl rand -hex 16）",
+  "listen": { "host": "0.0.0.0", "port": 8899 },
+
+  "adapter": "openai_compat",
+
+  "openai_compat": {
+    "base_url": "https://api.deepseek.com/v1",
+    "api_key_env": "DEEPSEEK_API_KEY",
+    "model": "deepseek-chat",
+    "system": "你正在通过手机语音回答。回答要短、口语化、直接给结论，不超过三句话。",
+    "timeout": 120,
+    "max_tokens": 800
+  },
+
+  "openclaw": {
+    "bin": "openclaw",
+    "session_prefix": "panel",
+    "timeout": 150
+  },
+
+  "webhook": {
+    "url": "http://127.0.0.1:5678/webhook/cat-panel",
+    "method": "POST",
+    "reply_path": "reply",
+    "headers": {},
+    "timeout": 120
+  },
+
+  "asr": {
+    "provider": "dashscope",
+    "model": "qwen3-asr-flash",
+    "api_key_env": "DASHSCOPE_API_KEY"
+  }
+}
