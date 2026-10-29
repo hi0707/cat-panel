@@ -52,8 +52,13 @@ Cat Panel 把这条路压成一步：**在任何界面上，点一下悬浮的�
 | 场景 | 方案 | 文档 |
 |---|---|---|
 | 在家 / 办公室 | 同一个 WiFi，填局域网 IP | [setup-lan](docs/setup-lan.md) |
-| 在外面也想用，不想花钱 | IPv6 + DDNS 直连 | [setup-ipv6-ddns](docs/setup-ipv6-ddns.md) |
-| 到处都要用，要稳定 | 国内小服务器 + frp | [setup-frp](docs/setup-frp.md) |
+| **中国大陆以外，或不想折腾路由器** | **Tailscale（装两个 App 就完事）** | [setup-tailscale](docs/setup-tailscale.md) |
+| 中国大陆，在外面也想用，不想花钱 | IPv6 + DDNS 直连 | [setup-ipv6-ddns](docs/setup-ipv6-ddns.md) |
+| 到处都要用，要稳定 | 小服务器 + frp | [setup-frp](docs/setup-frp.md) |
+
+> **中国大陆用户注意**：Tailscale 的登录入口和默认中转在境外，体验较差（详见 [setup-tailscale §8](docs/setup-tailscale.md)）。国内优先看 IPv6 或 frp 两档。
+
+> English docs: [README.en.md](README.en.md) · 中文为主，英文版补齐中。
 
 ## 装到手机上
 
